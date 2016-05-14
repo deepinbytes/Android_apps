@@ -1,0 +1,17 @@
+<resources>
+    <string name="app_name">EthaN</string>
+
+    <string name="hello_world">Hello world!</string>
+    <string name="image_view">Image View!</string>
+    <string name="action_settings">Settings</string>
+    <string name="action_imageview">Image view and Annotate</string>
+    <string name="title_activity_image_view">ImageViewActivity</string>
+    <string name="search_label">File Search</string>
+    <string name="font_color">Font Color</string>
+    <string name="font_size">Font Size</string>
+    <string name="font_format">Aa</string>
+    <string name="ok">Ok</string>
+    <string name="cancel">Cancel</string>
+    <string name="font_rotation">Rotation</string>
+    <string name="set_path">Select Folder</string>
+</resources>

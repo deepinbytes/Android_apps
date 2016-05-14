@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:annotate-image="http://schemas.annotateview.com/android"
+    android:layout_width="wrap_content"
+    android:layout_height="fill_parent" >
+
+    <sg.edu.nus.iss.sereserch.ethan.view.AnnotateImageView
+        android:id="@+id/image_editor_view"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:clickable="true" />
+
+
+
+    <LinearLayout
+        android:id="@+id/footer"
+        android:layout_width="fill_parent"
+        android:layout_height="@dimen/footer_height"
+        android:layout_alignParentBottom="true"
+        android:background="@drawable/backgrnd"
+        android:gravity="center"
+        android:weightSum="1">
+
+        <ToggleButton
+            android:layout_width="131dp"
+            android:layout_height="wrap_content"
+            android:text="New ToggleButton"
+            android:id="@+id/toggleButton"
+            android:checked="false"
+            android:textOff="Mark Image"
+            android:textOn="View Markings"
+            android:layout_gravity="left|center_vertical"
+            style="@style/Theme.AppCompat"
+            android:minWidth="200dp" />
+
+       <!-- <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+
+            android:text="Label"
+            android:id="@+id/textView"
+            android:enabled="true"
+            android:textColor="#ff000000" />
+
+        <ListView
+            android:layout_width="21dp"
+            android:layout_height="52dp"
+            android:id="@+id/listViewlabel"
+            android:padding="10dp"
+            android:layout_weight="0.47"
+            android:choiceMode="singleChoice"
+            android:descendantFocusability="blocksDescendants"   />-->
+
+        <Button
+            android:id="@+id/btn_undo"
+            android:layout_width="90dp"
+            android:layout_height="wrap_content"
+            android:padding="10dp"
+            android:text="Undo"
+            android:minWidth="120dp" />
+        <Button
+            android:id="@+id/btn_clear"
+            android:layout_width="74dp"
+            android:layout_height="wrap_content"
+            android:padding="10dp"
+            android:text="Clear"
+            android:minWidth="120dp" />
+
+        <Button
+            android:id="@+id/btn_save"
+            android:layout_width="65dp"
+            android:layout_height="wrap_content"
+            android:padding="10dp"
+            android:text="Save"
+            android:minWidth="120dp" />
+
+
+    </LinearLayout>
+
+</RelativeLayout><!-- From: file:/D:/NUS/Research/Itgrate/app/src/main/res/layout/annotate_diagram.xml -->

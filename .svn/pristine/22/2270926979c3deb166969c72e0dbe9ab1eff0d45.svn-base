@@ -1,0 +1,496 @@
+package com.radaee.reader;
+
+import com.radaee.pdf.Document;
+import com.radaee.pdf.Global;
+import com.radaee.pdf.Page.Annotation;
+import com.radaee.reader.PDFLayoutView.PDFLayoutListener;
+import com.radaee.util.PDFAssetStream;
+import com.radaee.util.PDFHttpStream;
+import com.radaee.view.VPage;
+import com.radaee.viewlib.R;
+
+import android.annotation.SuppressLint;
+import android.app.Activity;
+import android.app.AlertDialog;
+import android.content.DialogInterface;
+import android.content.Intent;
+import android.content.res.Configuration;
+import android.graphics.Bitmap;
+import android.net.Uri;
+import android.os.Bundle;
+import android.util.Log;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.webkit.WebView;
+import android.webkit.WebViewClient;
+import android.widget.Button;
+import android.widget.LinearLayout;
+import android.widget.PopupWindow;
+import android.widget.RadioGroup;
+import android.widget.RelativeLayout;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.UnsupportedEncodingException;
+import java.net.MalformedURLException;
+import java.net.URL;
+
+public class PDFViewAct extends Activity implements PDFLayoutListener
+{
+	static protected Document ms_tran_doc;
+	static private int m_tmp_index = 0;
+	private PDFAssetStream m_asset_stream = null;
+	private PDFHttpStream m_http_stream = null;
+	private Document m_doc = null;
+	private RelativeLayout m_layout = null;
+	private PDFLayoutView m_view = null;
+	private PDFViewController m_controller = null;
+	private boolean m_modified = false;
+	private boolean need_save_doc = false;
+    private void onFail(String msg)//treat open failed.
+    {
+    	m_doc.Close();
+    	m_doc = null;
+		Toast.makeText(this, msg, Toast.LENGTH_SHORT).show();
+		finish();
+    }
+    private final void ProcessOpenResult(int ret)
+    {
+		switch( ret )
+		{
+		case -1://need input password
+			onFail("Open Failed: Invalid Password");
+			break;
+		case -2://unknown encryption
+			onFail("Open Failed: Unknown Encryption");
+			break;
+		case -3://damaged or invalid format
+			onFail("Open Failed: Damaged or Invalid PDF file");
+			break;
+		case -10://access denied or invalid file path
+			onFail("Open Failed: Access denied or Invalid path");
+			break;
+		case 0://succeeded, and continue
+        	m_view.PDFOpen(m_doc, this);
+    		m_controller = new PDFViewController(m_layout, m_view);
+			break;
+		default://unknown error
+			onFail("Open Failed: Unknown Error");
+			break;
+		}
+    }
+    class MyPDFFontDel implements Document.PDFFontDelegate
+    {
+        @Override
+        public String GetExtFont(String collection, String fname, int flag, int[] ret_flags)
+        {
+            Log.i("ExtFont", fname);
+            return null;
+        }
+    }
+    private MyPDFFontDel m_font_del = new MyPDFFontDel();
+    @SuppressLint("InlinedApi")
+	@Override
+    public void onCreate(Bundle savedInstanceState)
+    {
+        super.onCreate(savedInstanceState);
+        //plz set this line to Activity in AndroidManifes.xml:
+        //    android:configChanges="orientation|keyboardHidden|screenSize"
+        //otherwise, APP shall destroy this Activity and re-create a new Activity when rotate. 
+        Global.Init( this );
+		m_layout = (RelativeLayout)LayoutInflater.from(this).inflate(R.layout.pdf_layout, null);
+		m_view = (PDFLayoutView)m_layout.findViewById(R.id.pdf_view);
+        Intent intent = getIntent();
+        String bmp_format = intent.getStringExtra("BMPFormat");
+        if(bmp_format != null)
+        {
+            if (bmp_format.compareTo("RGB_565") == 0)
+                m_view.PDFSetBmpFormat(Bitmap.Config.RGB_565);
+            else if (bmp_format.compareTo("ARGB_4444") == 0)
+                m_view.PDFSetBmpFormat(Bitmap.Config.ARGB_4444);
+        }
+        if(ms_tran_doc != null)
+        {
+        	m_doc = ms_tran_doc;
+        	ms_tran_doc = null;
+    		m_doc.SetCache(String.format("%s/temp%08x.dat", Global.tmp_path, m_tmp_index));//set temporary cache for editing.
+    		m_tmp_index++;
+        	m_view.PDFOpen(m_doc, this);
+    		m_controller = new PDFViewController(m_layout, m_view);
+    		need_save_doc = true;
+        }
+        else
+        {
+        	String pdf_asset = intent.getStringExtra("PDFAsset");
+        	String pdf_path = intent.getStringExtra("PDFPath");
+        	String pdf_pswd = intent.getStringExtra("PDFPswd");
+        	String pdf_http = intent.getStringExtra("PDFHttp");
+        	if(pdf_http != null && pdf_http != "" )
+        	{
+        		m_http_stream = new PDFHttpStream();
+        		m_http_stream.open(pdf_http);
+        		m_doc = new Document();
+        		int ret = m_doc.OpenStream(m_http_stream, pdf_pswd);
+        		ProcessOpenResult(ret);
+        	}
+        	else if( pdf_asset != null && pdf_asset != "" )
+        	{
+        		m_asset_stream = new PDFAssetStream();
+        		m_asset_stream.open(getAssets(), pdf_asset);
+        		m_doc = new Document();
+        		int ret = m_doc.OpenStream(m_asset_stream, pdf_pswd);
+        		ProcessOpenResult(ret);
+        	}
+        	else if( pdf_path != null && pdf_path != "" )
+        	{
+        		m_doc = new Document();
+        		int ret = m_doc.Open(pdf_path, pdf_pswd);
+                m_doc.SetCache(String.format("%s/temp%08x.dat", Global.tmp_path, m_tmp_index));//set temporary cache for editing.
+                m_tmp_index++;
+                m_doc.SetFontDel(m_font_del);
+        		ProcessOpenResult(ret);
+        	}
+        }
+		setContentView(m_layout);
+    }
+    @Override
+    public void onConfigurationChanged(Configuration newConfig)
+    {
+        super.onConfigurationChanged(newConfig);
+    }
+    @Override
+    public void onResume()
+    {
+    	super.onResume();
+    	if( m_doc == null )
+    		m_doc = m_view.PDFGetDoc();
+    }
+    @Override
+    public void onSaveInstanceState(Bundle savedInstanceState)
+    {
+        super.onSaveInstanceState(savedInstanceState);
+    	m_view.BundleSavePos(savedInstanceState);
+        if(need_save_doc && m_doc != null)
+        {
+        	Document.BundleSave(savedInstanceState, m_doc);//save Document object
+        	m_doc= null;
+        }
+    }
+    @Override
+    public void onRestoreInstanceState(Bundle savedInstanceState)
+    {
+        super.onRestoreInstanceState(savedInstanceState);
+        if( m_doc == null )
+        {
+	        m_doc = Document.BundleRestore(savedInstanceState);//restore Document object
+        	m_view.PDFOpen(m_doc, this);
+    		m_controller = new PDFViewController(m_layout, m_view);
+    		need_save_doc = true;
+        }
+    	m_view.BundleRestorePos(savedInstanceState);
+    }
+    
+    @Override
+    public void onBackPressed()
+    {
+    	if(m_controller == null || m_controller.OnBackPressed())
+    	{
+        	if(m_modified)
+        	{
+        		TextView txtView = new TextView(this);
+        		txtView.setText("Document modified\r\nDo you want save it?");
+				new AlertDialog.Builder(this).setTitle("Exiting").setView(
+						txtView).setPositiveButton("Yes", new DialogInterface.OnClickListener()
+						{
+				           @Override
+				           public void onClick(DialogInterface dialog, int which)
+				           {
+				        	   m_doc.Save();
+				        	   PDFViewAct.super.onBackPressed();
+				           }
+				       }).setNegativeButton("No", new DialogInterface.OnClickListener()
+				       {
+				           @Override
+				           public void onClick(DialogInterface dialog, int which)
+				           {
+				        	   PDFViewAct.super.onBackPressed();
+				           }
+				       }).show(); 
+        	}
+        	else super.onBackPressed();
+    	}
+    }
+
+    @SuppressLint("InlinedApi")
+	@Override
+    protected void onDestroy()
+    {
+    	if(m_doc != null)
+    	{
+	    	m_view.PDFClose();
+	    	m_doc.Close();
+	    	m_doc = null;
+    	}
+    	if( m_asset_stream != null )
+    	{
+    		m_asset_stream.close();
+    		m_asset_stream = null;
+    	}
+    	if( m_http_stream != null )
+    	{
+    		m_http_stream.close();
+    		m_http_stream = null;
+    	}
+    	super.onDestroy();
+    }
+	@Override
+	public void OnPDFPageModified(int pageno)
+	{
+		m_modified = true;
+	}
+	@Override
+	public void OnPDFPageChanged(int pageno)
+	{
+		if(m_controller != null)
+			m_controller.OnPageChanged(pageno);
+	}
+	@Override
+	public void OnPDFAnnotTapped(VPage vpage, Annotation annot)
+	{
+		if(m_controller != null)
+			m_controller.OnAnnotTapped(annot);
+	}
+	@Override
+	public void OnPDFBlankTapped()
+	{
+		if(m_controller != null)
+			m_controller.OnBlankTapped();
+	}
+	@Override
+	public void OnPDFSelectEnd(String text)
+	{
+		LinearLayout layout = (LinearLayout)LayoutInflater.from(this).inflate(R.layout.dlg_text, null);
+		final RadioGroup rad_group = (RadioGroup)layout.findViewById(R.id.rad_group);
+		final String sel_text = text;
+if(sel_text!=null)invokeWebScraping(sel_text);
+        //Display Highlighted Text
+        //DisplayHighlightedText(sel_text);
+       // invokePopup(sel_text);
+
+
+        //Smart Search
+        //invokeSmartSearch(sel_text);
+
+	}
+    public void invokeSmartSearch(String sel_text)
+    {
+
+        AlertDialog.Builder alert = new AlertDialog.Builder(this);
+        alert.setTitle("Smart search");
+
+        WebView wv = new WebView(this);
+        wv.getSettings().getJavaScriptEnabled();
+        wv.loadUrl("http://www.google.com/search?q="+sel_text+"&btnI");
+        wv.setWebViewClient(new WebViewClient() {
+            @Override
+            public boolean shouldOverrideUrlLoading(WebView view, String url) {
+                view.loadUrl(url);
+
+                return true;
+            }
+        });
+
+        alert.setView(wv);
+        alert.setNegativeButton("Close", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int id) {
+                dialog.dismiss();
+            }
+        });
+        alert.show();
+
+
+    }
+
+    public void invokePopup(String sel_text)
+    {
+        int a =10;
+        LayoutInflater layoutInflater
+                = (LayoutInflater)getBaseContext()
+                .getSystemService(LAYOUT_INFLATER_SERVICE);
+        View popupView = layoutInflater.inflate(R.layout.popup, null);
+        final PopupWindow popupWindow = new PopupWindow(
+                popupView,
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT);
+        TextView test= (TextView)findViewById(R.id.searchtextpopup);
+
+        Button btnDismiss = (Button)popupView.findViewById(R.id.dismiss);
+        btnDismiss.setOnClickListener(new Button.OnClickListener(){
+
+            @Override
+            public void onClick(View v) {
+                // TODO Auto-generated method stub
+                popupWindow.dismiss();
+            }});
+        if(sel_text.contains(" ")){
+            test.setText("Please select a word, not words!!!");
+        }
+        else {
+            String[] data = getMeaningfromGoogle(sel_text);
+
+            if (data[1].length() >= 500) {
+                test.setText("Apologies!!!\nThe meaning of this word cannot be fetched.\nWe suspect this word must be a common noun or a improper selection");
+            } else {
+                test.setText(data[1]);
+            }
+        }
+
+    }
+
+    public void invokeWebScraping(String sel_text)
+    {
+
+        AlertDialog.Builder alert = new AlertDialog.Builder(this);
+        alert.setTitle(sel_text);
+
+
+        TextView meaningTextView=new TextView(this);
+        if(sel_text.contains(" ")){
+            meaningTextView.setText("Please select a word, not words!!!");
+        }
+        else {
+            String[] data = getMeaningfromGoogle(sel_text);
+
+            if (data[1].length() >= 500) {
+                meaningTextView.setText("Apologies!!!\nThe meaning of this word cannot be fetched.\nWe suspect this word must be a common noun or a improper selection");
+            } else {
+                meaningTextView.setText(data[1]);
+            }
+        }
+
+        alert.setView(meaningTextView);
+        alert.setNegativeButton("Close", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int id) {
+                dialog.dismiss();
+            }
+        });
+        alert.show();
+
+
+    }
+
+    public String[] getMeaningfromGoogle(String searchWord){
+
+        String url="https://www.google.com/search?q=Define+"+searchWord;
+        StringBuilder builder=fetchUrlContent(url);
+        String[] data=new String[2];
+        String start="<div class=\"lr_dct_ent_ph\"><span class=\"lr_dct_ph\"><span>";
+        String end="</span>";
+        String phonetics=getTextInsideHtml(builder,start,end);
+        start="class=\"_Jig\"><div style=\"display:inline\" data-dobid=\"dfn\"><span>";
+        end="</span>";
+        String meaning =getTextInsideHtml(builder,start,end);
+        data[0]=phonetics;
+        data[1]=meaning;
+        return data;
+    }
+    public String getTextInsideHtml(StringBuilder builder, String start, String end){
+        String part= builder.substring(builder.indexOf(start)+ start.length());
+        String text=part.substring(0, part.indexOf(end));
+        return text;
+    }
+
+    public StringBuilder fetchUrlContent(String url){
+        StringBuilder builder = new StringBuilder();
+        BufferedReader reader;
+        try {
+            URL link = new URL(url);
+            InputStreamReader insr=new InputStreamReader(link.openStream(),"UTF-8");
+            reader=new BufferedReader(insr);
+            for(String line;(line=reader.readLine())!=null;){
+                builder.append(line.trim());
+            }
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        /*
+        finally {
+            if(reader!=null) {
+                try {
+                    reader.close();
+                } catch(IOException e) {
+                    e.printStackTrace();
+                }
+            }
+            */
+        // }
+
+        return builder;
+    }
+
+    public void DisplayHighlightedText(String sel_text)
+    {
+        AlertDialog.Builder alert = new AlertDialog.Builder(this);
+        alert.setTitle("Selected Text");
+
+
+        alert.setMessage(sel_text);
+        alert.setNegativeButton("Close", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int id) {
+                dialog.dismiss();
+            }
+        });
+        alert.show();
+    }
+	@Override
+	public void OnPDFOpenURI(String uri)
+	{
+		try
+		{
+	        Intent intent = new Intent();
+	        intent.setAction("android.intent.action.VIEW");
+	        Uri content_url = Uri.parse(uri);
+	        intent.setData(content_url);
+	        startActivity(intent);
+		}
+		catch(Exception e)
+		{
+			Toast.makeText(PDFViewAct.this, "todo: open url:" + uri, Toast.LENGTH_SHORT).show();
+		}
+    }
+	@Override
+	public void OnPDFOpenJS(String js)
+	{
+		Toast.makeText(PDFViewAct.this, "todo: execute java script", Toast.LENGTH_SHORT).show();
+	}
+	@Override
+	public void OnPDFOpenMovie(String path)
+	{
+		Toast.makeText(PDFViewAct.this, "todo: play movie", Toast.LENGTH_SHORT).show();
+	}
+	@Override
+	public void OnPDFOpenSound(int[] paras, String path)
+	{
+		Toast.makeText(PDFViewAct.this, "todo: play sound", Toast.LENGTH_SHORT).show();
+	}
+	@Override
+	public void OnPDFOpenAttachment(String path)
+	{
+		Toast.makeText(PDFViewAct.this, "todo: treat attachment", Toast.LENGTH_SHORT).show();
+	}
+	@Override
+	public void OnPDFOpen3D(String path)
+	{
+		Toast.makeText(PDFViewAct.this, "todo: play 3D module", Toast.LENGTH_SHORT).show();
+	}
+}

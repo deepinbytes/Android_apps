@@ -1,0 +1,13 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:context="sg.edu.nus.iss.sereserch.ethan.view.MainActivity">
+
+ <!--   <item android:id="@+id/action_settings" android:title="@string/action_settings"
+        android:orderInCategory="100" app:showAsAction="never" />
+    <item android:id="@+id/action_imageview" android:title="@string/action_imageview"
+        android:orderInCategory="100" app:showAsAction="never" />-->
+    <item android:id="@+id/action_setPath" android:title="@string/set_path"
+        android:orderInCategory="100" app:showAsAction="never" />
+</menu>
+<!-- From: file:/C:/Users/A0134610W/Android%20ProJects/New/EthaN/app/src/main/res/menu/menu_main.xml -->

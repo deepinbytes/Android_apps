@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<items version="2" >
+
+    <item
+        jar="C:\Users\Varshad\AppData\Local\Android\sdk\extras\android\m2repository\com\android\support\support-annotations\22.1.1\support-annotations-22.1.1.jar"
+        jumboMode="false"
+        revision="22.0.1"
+        sha1="01d051a6bfb1218b1db2d3a5af0480ac2c25c42a">
+        <dex dex="C:\Users\Varshad\AndroidStudioProjects\Refactored\EthaN\app\build\intermediates\pre-dexed\debug\support-annotations-22.1.1-e9e1ecb51f33a0cd13076cafea81755acd45d525.jar" />
+    </item>
+    <item
+        jar="C:\Users\Varshad\AndroidStudioProjects\Refactored\EthaN\app\build\intermediates\exploded-aar\com.android.support\support-v4\22.1.1\jars\libs\internal_impl-22.1.1.jar"
+        jumboMode="false"
+        revision="22.0.1"
+        sha1="9e070ad32b2700b0343e8e0cccc437733d91ba3a">
+        <dex dex="C:\Users\Varshad\AndroidStudioProjects\Refactored\EthaN\app\build\intermediates\pre-dexed\debug\internal_impl-22.1.1-8be0c2a2b3e010d89f254d68e678be52d596912d.jar" />
+    </item>
+    <item
+        jar="C:\Users\Varshad\AndroidStudioProjects\Refactored\EthaN\app\build\intermediates\exploded-aar\com.android.support\appcompat-v7\22.1.1\jars\classes.jar"
+        jumboMode="false"
+        revision="22.0.1"
+        sha1="a3ff3c506644c820eb2bdf06e8339f72be578551">
+        <dex dex="C:\Users\Varshad\AndroidStudioProjects\Refactored\EthaN\app\build\intermediates\pre-dexed\debug\classes-d9a9222b261f16ce8a6dd4325f8019615cf4620e.jar" />
+    </item>
+    <item
+        jar="C:\Users\Varshad\AndroidStudioProjects\Refactored\EthaN\app\build\intermediates\exploded-aar\com.android.support\support-v4\22.1.1\jars\classes.jar"
+        jumboMode="false"
+        revision="22.0.1"
+        sha1="c95ba8152923e4872e86a82cfcba9a51c0214328">
+        <dex dex="C:\Users\Varshad\AndroidStudioProjects\Refactored\EthaN\app\build\intermediates\pre-dexed\debug\classes-ce8f9c196814963e8093dd80b070afe834d49809.jar" />
+    </item>
+    <item
+        jar="C:\Users\Varshad\AndroidStudioProjects\Refactored\EthaN\app\build\intermediates\exploded-aar\EthaN\ViewLib\unspecified\jars\libs\com.radaee.view.jar"
+        jumboMode="false"
+        revision="22.0.1"
+        sha1="80e3dbcb080dcd54142e1cfd8250cc5c94950d83">
+        <dex dex="C:\Users\Varshad\AndroidStudioProjects\Refactored\EthaN\app\build\intermediates\pre-dexed\debug\com.radaee.view-0c49578af8a41899d972f0067334f22cc2db3230.jar" />
+    </item>
+    <item
+        jar="C:\Users\Varshad\AndroidStudioProjects\Refactored\EthaN\app\build\intermediates\exploded-aar\EthaN\ViewLib\unspecified\jars\classes.jar"
+        jumboMode="false"
+        revision="22.0.1"
+        sha1="4dd3c67834fa7669b1231a632988bd1cf35e751d">
+        <dex dex="C:\Users\Varshad\AndroidStudioProjects\Refactored\EthaN\app\build\intermediates\pre-dexed\debug\classes-78c1bcc44459852f9ec839bf0717c3ac06dc28b0.jar" />
+    </item>
+
+</items>
